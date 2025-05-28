@@ -35,7 +35,8 @@ public class FacultyService {
     public Faculty deleteFaculty(long id) {
         return faculties.remove(id);
     }
-    public Collection<Faculty> findByColor(String color) {
+    public Coll
+    ection<Faculty> findByColor(String color) {
         return faculties.values().stream()
                 .filter(faculty -> faculty.getColor().equalsIgnoreCase(color))
                 .collect(Collectors.toList());
