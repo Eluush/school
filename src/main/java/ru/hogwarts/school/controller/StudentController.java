@@ -10,7 +10,6 @@ import java.util.Collection;
 
 @RestController
 @RequestMapping("/student")
-
 @Tag(name = "Student API", description = "Управление студентами Хогвартса")
 public class StudentController {
     private final StudentService studentService;
