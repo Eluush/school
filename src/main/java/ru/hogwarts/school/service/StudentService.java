@@ -2,46 +2,45 @@ package ru.hogwarts.school.service;
 
 import org.springframework.stereotype.Service;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class StudentService {
+    private final StudentRepository repository;
 
-    private final Map<Long, Student> students = new HashMap<>();
-    private long lastId = 0;
+    public StudentService(StudentRepository repository) {
+        this.repository = repository;
+    }
 
     public Student createStudent(String name, int age) {
-        long newId = ++lastId;
-        Student student = new Student(newId, name, age);
-        students.put(newId, student);
-        return student;
+        Student student = new Student(name, age);
+        return repository.save(student);
     }
 
-    public Student findStudent(long id) {
-        return students.get(id);
-    }
-
-    public Student updateStudent(long id, String name, int age) {
-        Student student = students.get(id);
-        if (student != null) {
-            student.setName(name);
-            student.setAge(age);
-        }
-        return student;
-    }
-
-
-    public Student deleteStudent(long id) {
-        return students.remove(id);
+    public Student findStudent(Long id) {
+        return repository.findById(id).orElse(null);
     }
 
     public Collection<Student> findByAge(int age) {
-        return students.values().stream()
-                .filter(student -> student.getAge() == age)
-                .collect(Collectors.toList());
+        return repository.findByAge(age);
+    }
+
+    public Student updateStudent(Long id, String name, int age) {
+        return repository.findById(id)
+                .map(student -> {
+                    student.setName(name);
+                    student.setAge(age);
+                    return repository.save(student);
+                })
+                .orElse(null);
+    }
+
+    public Student deleteStudent(Long id) {
+        Optional<Student> student = repository.findById(id);
+        student.ifPresent(repository::delete);
+        return student.orElse(null);
     }
 }
