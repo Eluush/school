@@ -5,42 +5,46 @@ import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.repository.FacultyRepository;
 
 import java.util.Collection;
-import java.util.Optional;
 
 @Service
 public class FacultyService {
-    private final FacultyRepository repository;
+    private final FacultyRepository facultyRepository;
 
-    public FacultyService(FacultyRepository repository) {
-        this.repository = repository;
+    public FacultyService(FacultyRepository facultyRepository) {
+        this.facultyRepository = facultyRepository;
     }
 
     public Faculty createFaculty(String name, String color) {
-        Faculty faculty = new Faculty(name, color);
-        return repository.save(faculty);
+        Faculty faculty = new Faculty();
+        faculty.setName(name);
+        faculty.setColor(color);
+        return facultyRepository.save(faculty);
     }
 
     public Faculty findFaculty(Long id) {
-        return repository.findById(id).orElse(null);
+        return facultyRepository.findById(id).orElse(null);
     }
 
-    public Collection<Faculty> findByColor(String color) {
-        return repository.findByColorIgnoreCase(color);
+    public Collection<Faculty> findByNameOrColor(String nameOrColor) {
+
+        return facultyRepository.findByNameContainingIgnoreCaseOrColorContainingIgnoreCase(nameOrColor, nameOrColor);
     }
 
     public Faculty updateFaculty(Long id, String name, String color) {
-        return repository.findById(id)
-                .map(faculty -> {
-                    faculty.setName(name);
-                    faculty.setColor(color);
-                    return repository.save(faculty);
-                })
-                .orElse(null);
+        Faculty faculty = findFaculty(id);
+        if (faculty != null) {
+            if (name != null) faculty.setName(name);
+            if (color != null) faculty.setColor(color);
+            return facultyRepository.save(faculty);
+        }
+        return null;
     }
 
-    public Faculty deleteFaculty(Long id) {
-        Optional<Faculty> faculty = repository.findById(id);
-        faculty.ifPresent(repository::delete);
-        return faculty.orElse(null);
+    public boolean deleteFaculty(Long id) {
+        if (facultyRepository.existsById(id)) {
+            facultyRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 }
