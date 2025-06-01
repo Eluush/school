@@ -1,45 +1,68 @@
 package ru.hogwarts.school.service;
 
+import org.springframework.stereotype.Service;
+import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.FacultyRepository;
+import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
 
+@Service
 public class StudentService {
+    private final StudentRepository studentRepository;
+    private final FacultyRepository facultyRepository; // Добавлено
 
-    private final Map<Long, Student> students = new HashMap<>();
-    private long lastId = 0;
-
-    public Student createStudent(String name, int age) {
-        long newId = ++lastId;
-        Student student = new Student(newId, name, age);
-        students.put(newId, student);
-        return student;
+    public StudentService(StudentRepository studentRepository, FacultyRepository facultyRepository) {
+        this.studentRepository = studentRepository;
+        this.facultyRepository = facultyRepository; // Инициализация
     }
 
-    public Student findStudent(long id) {
-        return students.get(id);
-    }
+    public Student createStudent(String name, int age, Long facultyId) {
+        Student student = new Student();
+        student.setName(name);
+        student.setAge(age);
 
-    public Student updateStudent(long id, String name, int age) {
-        Student student = students.get(id);
-        if (student != null) {
-            student.setName(name);
-            student.setAge(age);
+        if (facultyId != null) {
+            Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
+            student.setFaculty(faculty);
         }
-        return student;
+        return studentRepository.save(student);
     }
 
-
-    public Student deleteStudent(long id) {
-        return students.remove(id);
+    public Student updateStudent(Long id, String name, Integer age, Long facultyId) {
+        Student student = studentRepository.findById(id).orElse(null);
+        if (student != null) {
+            if (name != null) student.setName(name);
+            if (age != null) student.setAge(age);
+            if (facultyId != null) {
+                Faculty faculty = facultyRepository.findById(facultyId).orElse(null);
+                student.setFaculty(faculty);
+            }
+            return studentRepository.save(student);
+        }
+        return null;
     }
 
-    public Collection<Student> findByAge(int age) {
-        return students.values().stream()
-                .filter(student -> student.getAge() == age)
-                .collect(Collectors.toList());
+    public Faculty getStudentFaculty(Long id) {
+        Student student = studentRepository.findById(id).orElse(null);
+        return student != null ? student.getFaculty() : null;
+    }
+
+    public Student findStudent(Long id) {
+        return studentRepository.findById(id).orElse(null);
+    }
+
+    public Collection<Student> findByAgeBetween(int min, int max) {
+        return studentRepository.findByAgeBetween(min, max); // Предполагается, что этот метод существует в репозитории
+    }
+
+    public Student deleteStudent(Long id) {
+        Student student = studentRepository.findById(id).orElse(null);
+        if (student != null) {
+            studentRepository.delete(student);
+            return student;
+        }
+        return null;
     }
 }
