@@ -17,7 +17,17 @@ public class Faculty {
     @OneToMany(mappedBy = "faculty", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Student> students = new ArrayList<>();
 
-    // Геттеры и сеттеры
+
+    public Faculty() {
+    }
+
+
+    public Faculty(String name, String color) {
+        this.name = name;
+        this.color = color;
+    }
+
+
     public Long getId() {
         return id;
     }
@@ -50,7 +60,6 @@ public class Faculty {
         this.students = students;
     }
 
-
     public void addStudent(Student student) {
         students.add(student);
         student.setFaculty(this);
@@ -61,3 +70,4 @@ public class Faculty {
         student.setFaculty(null);
     }
 }
+

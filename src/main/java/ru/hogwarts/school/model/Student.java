@@ -1,10 +1,6 @@
 package ru.hogwarts.school.model;
 
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
 public class Student {
@@ -13,7 +9,24 @@ public class Student {
     private Long id;
     private String name;
     private int age;
+
+    @ManyToOne
+    @JoinColumn(name = "faculty_id")
     private Faculty faculty;
+
+    @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
+    private Avatar avatar;
+
+
+    public Student() {
+    }
+
+
+    public Student(String name, int age, Faculty faculty) {
+        this.name = name;
+        this.age = age;
+        this.faculty = faculty;
+    }
 
 
     public Long getId() {
@@ -46,5 +59,13 @@ public class Student {
 
     public void setFaculty(Faculty faculty) {
         this.faculty = faculty;
+    }
+
+    public Avatar getAvatar() {
+        return avatar;
+    }
+
+    public void setAvatar(Avatar avatar) {
+        this.avatar = avatar;
     }
 }
