@@ -33,7 +33,7 @@ public class AvatarService {
     }
 
     public Avatar uploadAvatar(Long studentId, MultipartFile file) throws IOException {
-        Student student = studentService.findStudentById(studentId);
+        Student student = studentService.findStudent(studentId); // Изменено с findStudentById на findStudent
 
 
         String originalFilename = file.getOriginalFilename();

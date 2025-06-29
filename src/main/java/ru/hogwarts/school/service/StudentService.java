@@ -1,5 +1,6 @@
 package ru.hogwarts.school.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
@@ -7,15 +8,17 @@ import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.repository.StudentRepository;
 
 import java.util.Collection;
+import java.util.List;
 
 @Service
 public class StudentService {
     private final StudentRepository studentRepository;
-    private final FacultyRepository facultyRepository; // Добавлено
+    private final FacultyRepository facultyRepository;
 
+    @Autowired
     public StudentService(StudentRepository studentRepository, FacultyRepository facultyRepository) {
         this.studentRepository = studentRepository;
-        this.facultyRepository = facultyRepository; // Инициализация
+        this.facultyRepository = facultyRepository;
     }
 
     public Student createStudent(String name, int age, Long facultyId) {
@@ -65,7 +68,17 @@ public class StudentService {
         }
         return null;
     }
-    public Student findStudentById(Long id) {
-        return studentRepository.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
+
+    public long getCountOfStudents() {
+        return studentRepository.count();
+    }
+
+    public Double getAverageAge() {
+        return studentRepository.findAverageAge();
+    }
+
+    public List<Student> getLastFiveStudents() {
+        return studentRepository.findLastFiveStudents();
     }
 }
+

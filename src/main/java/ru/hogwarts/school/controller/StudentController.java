@@ -1,5 +1,6 @@
 package ru.hogwarts.school.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.model.Faculty;
@@ -17,6 +18,7 @@ import java.util.List;
 public class StudentController {
     private final StudentService studentService;
 
+    @Autowired
     public StudentController(StudentService studentService) {
         this.studentService = studentService;
     }
@@ -67,5 +69,23 @@ public class StudentController {
     public ResponseEntity<Faculty> getStudentFaculty(@PathVariable Long id) {
         Faculty faculty = studentService.getStudentFaculty(id);
         return faculty != null ? ResponseEntity.ok(faculty) : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/count")
+    @Operation(summary = "Получить количество студентов")
+    public long getCountOfStudents() {
+        return studentService.getCountOfStudents();
+    }
+
+    @GetMapping("/average-age")
+    @Operation(summary = "Получить средний возраст студентов")
+    public Double getAverageAge() {
+        return studentService.getAverageAge();
+    }
+
+    @GetMapping("/last-five")
+    @Operation(summary = "Получить последних 5 студентов")
+    public List<Student> getLastFiveStudents() {
+        return studentService.getLastFiveStudents();
     }
 }
