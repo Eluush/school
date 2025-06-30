@@ -8,12 +8,17 @@ import ru.hogwarts.school.model.Avatar;
 import ru.hogwarts.school.repository.AvatarRepository;
 
 @RestController
+@RequestMapping("/avatars")
 public class AvatarController {
 
-    @Autowired
-    private AvatarRepository avatarRepository;
+    private final AvatarRepository avatarRepository;
 
-    @GetMapping("/avatars")
+    @Autowired
+    public AvatarController(AvatarRepository avatarRepository) {
+        this.avatarRepository = avatarRepository;
+    }
+
+    @GetMapping
     public Page<Avatar> getAvatars(Pageable pageable) {
         return avatarRepository.findAll(pageable);
     }

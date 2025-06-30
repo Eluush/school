@@ -1,5 +1,8 @@
 package ru.hogwarts.school.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import ru.hogwarts.school.model.Avatar;
@@ -18,6 +21,7 @@ public class AvatarService {
     private final StudentService studentService;
     private final Path rootLocation = Paths.get("avatars");
 
+    @Autowired
     public AvatarService(AvatarRepository avatarRepository, StudentService studentService) {
         this.avatarRepository = avatarRepository;
         this.studentService = studentService;
@@ -33,17 +37,14 @@ public class AvatarService {
     }
 
     public Avatar uploadAvatar(Long studentId, MultipartFile file) throws IOException {
-        Student student = studentService.findStudent(studentId); // Изменено с findStudentById на findStudent
-
+        Student student = studentService.findStudent(studentId);
 
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         String newFilename = UUID.randomUUID() + extension;
         Path targetPath = rootLocation.resolve(newFilename);
 
-
         Files.copy(file.getInputStream(), targetPath);
-
 
         Avatar avatar = new Avatar();
         avatar.setFilePath(targetPath.toString());
@@ -51,7 +52,6 @@ public class AvatarService {
         avatar.setMediaType(file.getContentType());
         avatar.setData(file.getBytes());
         avatar.setStudent(student);
-
 
         student.setAvatar(avatar);
         return avatarRepository.save(avatar);
@@ -64,5 +64,9 @@ public class AvatarService {
     public byte[] getAvatarFromFile(Long id) throws IOException {
         Avatar avatar = avatarRepository.findById(id).orElseThrow();
         return Files.readAllBytes(Paths.get(avatar.getFilePath()));
+    }
+
+    public Page<Avatar> getAvatars(Pageable pageable) {
+        return avatarRepository.findAll(pageable);
     }
 }
