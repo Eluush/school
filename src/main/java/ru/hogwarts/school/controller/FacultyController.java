@@ -3,9 +3,9 @@ package ru.hogwarts.school.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import ru.hogwarts.school.exeption.ResourceNotFoundException;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.service.FacultyService;
 
@@ -23,17 +23,20 @@ public class FacultyController {
 
     @PostMapping
     @Operation(summary = "Создать новый факультет")
-    public ResponseEntity<Faculty> createFaculty(@RequestParam String name,
-                                                 @RequestParam String color) {
-        Faculty faculty = facultyService.createFaculty(name, color);
-        return new ResponseEntity<>(faculty, HttpStatus.CREATED);
+    @ResponseStatus(HttpStatus.CREATED)
+    public Faculty createFaculty(@RequestParam String name,
+                                 @RequestParam String color) {
+        return facultyService.createFaculty(name, color);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Получить факультет по ID")
-    public ResponseEntity<Faculty> getFaculty(@PathVariable Long id) {
+    public Faculty getFaculty(@PathVariable Long id) {
         Faculty faculty = facultyService.findFaculty(id);
-        return faculty != null ? ResponseEntity.ok(faculty) : ResponseEntity.notFound().build();
+        if (faculty == null) {
+            throw new ResourceNotFoundException("Faculty not found with id " + id);
+        }
+        return faculty;
     }
 
     @GetMapping("/by-name-or-color")
@@ -44,20 +47,21 @@ public class FacultyController {
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновить данные факультета")
-    public ResponseEntity<Faculty> updateFaculty(@PathVariable Long id, @RequestParam String name,
-                                                 @RequestParam String color) {
+    public Faculty updateFaculty(@PathVariable Long id, @RequestParam String name,
+                                 @RequestParam String color) {
         Faculty updatedFaculty = facultyService.updateFaculty(id, name, color);
-        return updatedFaculty != null ? ResponseEntity.ok(updatedFaculty) : ResponseEntity.notFound().build();
+        if (updatedFaculty == null) {
+            throw new ResourceNotFoundException("Faculty not found with id " + id);
+        }
+        return updatedFaculty;
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить факультет")
-    public ResponseEntity<Void> deleteFaculty(@PathVariable Long id) {
-        if (facultyService.deleteFaculty(id)) {
-            return ResponseEntity.noContent().build();
-        } else {
-            return ResponseEntity.notFound().build();
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteFaculty(@PathVariable Long id) {
+        if (!facultyService.deleteFaculty(id)) {
+            throw new ResourceNotFoundException("Faculty not found with id " + id);
         }
     }
 }
-
