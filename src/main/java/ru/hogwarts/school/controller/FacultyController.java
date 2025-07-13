@@ -7,19 +7,24 @@ import org.springframework.web.bind.annotation.*;
 
 import ru.hogwarts.school.exeption.ResourceNotFoundException;
 import ru.hogwarts.school.model.Faculty;
+import ru.hogwarts.school.repository.FacultyRepository;
 import ru.hogwarts.school.service.FacultyService;
 
 import java.util.Collection;
+import java.util.Comparator;
 
 @RestController
 @RequestMapping("/faculty")
 @Tag(name = "Faculty API", description = "Управление факультетами Хогвартса")
 public class FacultyController {
     private final FacultyService facultyService;
+    private final FacultyRepository facultyRepository;
 
-    public FacultyController(FacultyService facultyService) {
+    public FacultyController(FacultyService facultyService, FacultyRepository facultyRepository) {
         this.facultyService = facultyService;
+        this.facultyRepository = facultyRepository;
     }
+
 
     @PostMapping
     @Operation(summary = "Создать новый факультет")
@@ -64,4 +69,15 @@ public class FacultyController {
             throw new ResourceNotFoundException("Faculty not found with id " + id);
         }
     }
+
+    @GetMapping("/longest-name")
+    @Operation(summary = "Получить самое длинное название факультета")
+    public String getLongestFacultyName() {
+        return facultyRepository.findAll().stream()
+                .map(Faculty::getName)
+                .filter(name -> name != null)
+                .max(Comparator.comparingInt(String::length))
+                .orElse("");
+    }
+
 }
