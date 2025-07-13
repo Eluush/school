@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RestController
@@ -109,4 +111,67 @@ public class StudentController {
                 .average()
                 .orElse(0.0);
     }
+
+    @GetMapping("/print-parallel")
+    public String printParallel() throws InterruptedException, ExecutionException {
+        List<Student> students = studentRepository.findAll();
+        if (students.size() < 6) {
+            return "Need at least 6 students";
+        }
+
+
+        System.out.println("Main Thread: " + students.get(0).getName());
+        System.out.println("Main Thread: " + students.get(1).getName());
+
+
+        CompletableFuture<Void> thread1 = CompletableFuture.runAsync(() -> {
+            System.out.println("Parallel Thread 1: " + students.get(2).getName());
+            System.out.println("Parallel Thread 1: " + students.get(3).getName());
+        });
+
+        CompletableFuture<Void> thread2 = CompletableFuture.runAsync(() -> {
+            System.out.println("Parallel Thread 2: " + students.get(4).getName());
+            System.out.println("Parallel Thread 2: " + students.get(5).getName());
+        });
+
+
+        CompletableFuture.allOf(thread1, thread2).get();
+
+        return "Parallel printing completed. Check console.";
+    }
+
+
+    @GetMapping("/print-synchronized")
+    public String printSynchronized() throws InterruptedException, ExecutionException {
+        List<Student> students = studentRepository.findAll();
+        if (students.size() < 6) {
+            return "Need at least 6 students";
+        }
+
+
+        printName(students.get(0).getName());
+        printName(students.get(1).getName());
+
+
+        CompletableFuture<Void> thread1 = CompletableFuture.runAsync(() -> {
+            printName(students.get(2).getName());
+            printName(students.get(3).getName());
+        });
+
+        CompletableFuture<Void> thread2 = CompletableFuture.runAsync(() -> {
+            printName(students.get(4).getName());
+            printName(students.get(5).getName());
+        });
+
+
+        CompletableFuture.allOf(thread1, thread2).get();
+
+        return "Synchronized printing completed. Check console.";
+    }
+
+
+    private synchronized void printName(String name) {
+        System.out.println("Synchronized Print: " + name + " | Thread: " + Thread.currentThread().getName());
+    }
 }
+
