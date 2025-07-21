@@ -1,28 +1,47 @@
 package ru.hogwarts.school.controller;
 
 import org.springframework.web.bind.annotation.*;
+import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
+import ru.hogwarts.school.repository.StudentRepository;
+import ru.hogwarts.school.service.StudentPrintingService;
 import ru.hogwarts.school.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/student")
+@RequestMapping("/students")
 @Tag(name = "Student API", description = "Управление студентами Хогвартса")
 public class StudentController {
     private final StudentService studentService;
+    private final StudentRepository studentRepository;
+    private final StudentPrintingService studentPrintingService;
 
-    public StudentController(StudentService studentService) {
+    public StudentController(
+            StudentService studentService,
+            StudentRepository studentRepository,
+            StudentPrintingService studentPrintingService
+    ) {
         this.studentService = studentService;
+        this.studentRepository = studentRepository;
+        this.studentPrintingService = studentPrintingService;
     }
+
 
     @PostMapping
     @Operation(summary = "Создать нового студента")
-    public Student createStudent(@RequestParam String name,
-                                 @RequestParam int age) {
-        return studentService.createStudent(name, age);
+    public Student createStudent(
+            @RequestParam String name,
+            @RequestParam int age,
+            @RequestParam(required = false) Long facultyId
+    ) {
+        return studentService.createStudent(name, age, facultyId);
     }
 
     @GetMapping("/{id}")
@@ -31,23 +50,91 @@ public class StudentController {
         return studentService.findStudent(id);
     }
 
-    @GetMapping("/by-age")
-    @Operation(summary = "Фильтрация студентов по возрасту")
-    public Collection<Student> getStudentsByAge(@RequestParam int age) {
-        return studentService.findByAge(age);
+    @GetMapping("/by-age-between")
+    @Operation(summary = "Фильтрация студентов по возрастному диапазону")
+    public Collection<Student> getStudentsByAgeBetween(
+            @RequestParam int min,
+            @RequestParam int max
+    ) {
+        return studentService.findByAgeBetween(min, max);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновить данные студента")
-    public Student updateStudent(@PathVariable Long id,
-                                 @RequestParam String name,
-                                 @RequestParam int age) {
-        return studentService.updateStudent(id, name, age);
+    public Student updateStudent(
+            @PathVariable Long id,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer age,
+            @RequestParam(required = false) Long facultyId
+    ) {
+        return studentService.updateStudent(id, name, age, facultyId);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Удалить студента")
-    public Student deleteStudent(@PathVariable Long id) {
-        return studentService.deleteStudent(id);
+    public void deleteStudent(@PathVariable Long id) {
+        studentService.deleteStudent(id);
+    }
+
+
+    @GetMapping("/{id}/faculty")
+    @Operation(summary = "Получить факультет студента")
+    public Faculty getStudentFaculty(@PathVariable Long id) {
+        return studentService.getStudentFaculty(id);
+    }
+
+    @GetMapping("/count")
+    @Operation(summary = "Получить количество студентов")
+    public long getCountOfStudents() {
+        return studentService.getCountOfStudents();
+    }
+
+    @GetMapping("/average-age")
+    @Operation(summary = "Получить средний возраст студентов")
+    public Double getAverageAge() {
+        return studentService.getAverageAge();
+    }
+
+    @GetMapping("/last-five")
+    @Operation(summary = "Получить последних 5 студентов")
+    public List<Student> getLastFiveStudents() {
+        return studentService.getLastFiveStudents();
+    }
+
+
+    @GetMapping("/names-starting-with-a")
+    @Operation(summary = "Получить имена студентов, начинающиеся на 'А'")
+    public List<String> getNamesStartingWithA() {
+        return studentRepository.findAll().stream()
+                .map(Student::getName)
+                .filter(Objects::nonNull)
+                .filter(name -> name.toUpperCase().startsWith("А"))
+                .map(name -> name.toUpperCase(Locale.ROOT))
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/average-age-repo")
+    @Operation(summary = "Средний возраст студентов (через репозиторий)")
+    public double getAverageAgeViaRepo() {
+        return studentRepository.findAll().stream()
+                .mapToInt(Student::getAge)
+                .average()
+                .orElse(0.0);
+    }
+
+    // Параллельные операции
+    @GetMapping("/print-parallel")
+    @Operation(summary = "Параллельный вывод имен студентов")
+    public String printParallel() {
+        studentPrintingService.printParallel();
+        return "Parallel printing initiated. Check console logs.";
+    }
+
+    @GetMapping("/print-synchronized")
+    @Operation(summary = "Синхронизированный вывод имен студентов")
+    public String printSynchronized() {
+        studentPrintingService.printSynchronized();
+        return "Synchronized printing initiated. Check console logs.";
     }
 }
