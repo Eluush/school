@@ -57,7 +57,7 @@ public class StudentService {
     }
 
     public Collection<Student> findByAgeBetween(int min, int max) {
-        return studentRepository.findByAgeBetween(min, max); // Предполагается, что этот метод существует в репозитории
+        return studentRepository.findByAgeBetween(min, max);
     }
 
     public Student deleteStudent(Long id) {

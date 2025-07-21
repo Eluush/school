@@ -1,10 +1,10 @@
 package ru.hogwarts.school.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import ru.hogwarts.school.model.Faculty;
 import ru.hogwarts.school.model.Student;
 import ru.hogwarts.school.repository.StudentRepository;
+import ru.hogwarts.school.service.StudentPrintingService;
 import ru.hogwarts.school.service.StudentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,28 +13,34 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/student")
+@RequestMapping("/students")
 @Tag(name = "Student API", description = "Управление студентами Хогвартса")
 public class StudentController {
     private final StudentService studentService;
     private final StudentRepository studentRepository;
+    private final StudentPrintingService studentPrintingService;
 
-    @Autowired
-    public StudentController(StudentService studentService, StudentRepository studentRepository) {
+    public StudentController(
+            StudentService studentService,
+            StudentRepository studentRepository,
+            StudentPrintingService studentPrintingService
+    ) {
         this.studentService = studentService;
         this.studentRepository = studentRepository;
+        this.studentPrintingService = studentPrintingService;
     }
+
 
     @PostMapping
     @Operation(summary = "Создать нового студента")
-    public Student createStudent(@RequestParam String name,
-                                 @RequestParam int age,
-                                 @RequestParam(required = false) Long facultyId) {
+    public Student createStudent(
+            @RequestParam String name,
+            @RequestParam int age,
+            @RequestParam(required = false) Long facultyId
+    ) {
         return studentService.createStudent(name, age, facultyId);
     }
 
@@ -48,16 +54,19 @@ public class StudentController {
     @Operation(summary = "Фильтрация студентов по возрастному диапазону")
     public Collection<Student> getStudentsByAgeBetween(
             @RequestParam int min,
-            @RequestParam int max) {
+            @RequestParam int max
+    ) {
         return studentService.findByAgeBetween(min, max);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Обновить данные студента")
-    public Student updateStudent(@PathVariable Long id,
-                                 @RequestParam(required = false) String name,
-                                 @RequestParam(required = false) Integer age,
-                                 @RequestParam(required = false) Long facultyId) {
+    public Student updateStudent(
+            @PathVariable Long id,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) Integer age,
+            @RequestParam(required = false) Long facultyId
+    ) {
         return studentService.updateStudent(id, name, age, facultyId);
     }
 
@@ -66,6 +75,7 @@ public class StudentController {
     public void deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
     }
+
 
     @GetMapping("/{id}/faculty")
     @Operation(summary = "Получить факультет студента")
@@ -91,6 +101,7 @@ public class StudentController {
         return studentService.getLastFiveStudents();
     }
 
+
     @GetMapping("/names-starting-with-a")
     @Operation(summary = "Получить имена студентов, начинающиеся на 'А'")
     public List<String> getNamesStartingWithA() {
@@ -112,66 +123,18 @@ public class StudentController {
                 .orElse(0.0);
     }
 
+    // Параллельные операции
     @GetMapping("/print-parallel")
-    public String printParallel() throws InterruptedException, ExecutionException {
-        List<Student> students = studentRepository.findAll();
-        if (students.size() < 6) {
-            return "Need at least 6 students";
-        }
-
-
-        System.out.println("Main Thread: " + students.get(0).getName());
-        System.out.println("Main Thread: " + students.get(1).getName());
-
-
-        CompletableFuture<Void> thread1 = CompletableFuture.runAsync(() -> {
-            System.out.println("Parallel Thread 1: " + students.get(2).getName());
-            System.out.println("Parallel Thread 1: " + students.get(3).getName());
-        });
-
-        CompletableFuture<Void> thread2 = CompletableFuture.runAsync(() -> {
-            System.out.println("Parallel Thread 2: " + students.get(4).getName());
-            System.out.println("Parallel Thread 2: " + students.get(5).getName());
-        });
-
-
-        CompletableFuture.allOf(thread1, thread2).get();
-
-        return "Parallel printing completed. Check console.";
+    @Operation(summary = "Параллельный вывод имен студентов")
+    public String printParallel() {
+        studentPrintingService.printParallel();
+        return "Parallel printing initiated. Check console logs.";
     }
-
 
     @GetMapping("/print-synchronized")
-    public String printSynchronized() throws InterruptedException, ExecutionException {
-        List<Student> students = studentRepository.findAll();
-        if (students.size() < 6) {
-            return "Need at least 6 students";
-        }
-
-
-        printName(students.get(0).getName());
-        printName(students.get(1).getName());
-
-
-        CompletableFuture<Void> thread1 = CompletableFuture.runAsync(() -> {
-            printName(students.get(2).getName());
-            printName(students.get(3).getName());
-        });
-
-        CompletableFuture<Void> thread2 = CompletableFuture.runAsync(() -> {
-            printName(students.get(4).getName());
-            printName(students.get(5).getName());
-        });
-
-
-        CompletableFuture.allOf(thread1, thread2).get();
-
-        return "Synchronized printing completed. Check console.";
-    }
-
-
-    private synchronized void printName(String name) {
-        System.out.println("Synchronized Print: " + name + " | Thread: " + Thread.currentThread().getName());
+    @Operation(summary = "Синхронизированный вывод имен студентов")
+    public String printSynchronized() {
+        studentPrintingService.printSynchronized();
+        return "Synchronized printing initiated. Check console logs.";
     }
 }
-
